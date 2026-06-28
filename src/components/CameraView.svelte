@@ -1,85 +1,80 @@
 <script>
     import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
+    import Peer from 'peerjs';
 
-    let { inputUrl = $bindable(""), activeUrl = $bindable(""), hasError = $bindable(false) } = $props();
-
-    // Deteksi apakah link adalah video MP4
-    let isVideo = $derived(activeUrl.toLowerCase().endsWith('.mp4'));
-
-    function applyUrl() {
-        if (!inputUrl) return;
-        activeUrl = inputUrl;
-        hasError = false;
-        localStorage.setItem('cameraUrl', inputUrl);
-    }
+    let myPeerId = $state(null);
+    let streams = $state({}); // Menyimpan objek stream: { peerId: stream }
+    let activePeerId = $state(null); // ID kamera yang sedang full screen
+    let peer;
 
     onMount(() => {
-        const savedUrl = localStorage.getItem('cameraUrl');
-        if (savedUrl) {
-            inputUrl = savedUrl;
-            activeUrl = savedUrl;
-        }
+        if (browser) myPeerId = localStorage.getItem('dashboardPeerId');
+
+        peer = new Peer(myPeerId || undefined);
+
+        peer.on('open', (id) => {
+            myPeerId = id;
+            if (browser) localStorage.setItem('dashboardPeerId', id);
+        });
+
+        peer.on('call', (call) => {
+            call.answer();
+            call.on('stream', (remoteStream) => {
+                streams[call.peer] = remoteStream;
+                
+                // Secara default: jika belum ada yang full screen, jadikan yang pertama terhubung full screen
+                if (!activePeerId) activePeerId = call.peer;
+            });
+            
+            call.on('close', () => {
+                delete streams[call.peer];
+                if (activePeerId === call.peer) {
+                    activePeerId = Object.keys(streams)[0] || null;
+                }
+            });
+        });
+
+        return () => { if (peer) peer.destroy(); };
     });
+
+    // FUNGSI TUKAR: Mengganti kamera full screen dengan yang diklik
+    function swapCamera(id) {
+        activePeerId = id;
+    }
 </script>
 
-<div class="fixed inset-0 z-[100] flex items-start justify-center pt-4 bg-black/90 pointer-events-auto">
+<div class="fixed inset-0 w-full h-full bg-black">
     
-    {#if activeUrl && !hasError}
-        <!-- Tampilkan Video jika link diakhiri .mp4, jika tidak pakai <img> untuk stream -->
-        {#if isVideo}
-            <video 
-                src={activeUrl} 
-                autoplay 
-                loop 
-                muted 
-                playsinline
-                class="w-full h-full object-cover"
-                onerror={() => hasError = true}
-            ></video> <!-- Perubahan di sini: Menggunakan tag penutup -->
-        {:else}
-            <img 
-                src={activeUrl} 
-                alt="Live Stream"
-                class="w-full h-full object-cover"
-                onerror={() => hasError = true}
-            />
-        {/if}
-
-        <button 
-            class="absolute top-4 right-4 bg-red-600/80 text-white px-4 py-2 rounded-lg text-sm z-[101]"
-            onclick={() => { activeUrl = ""; }}
-        >
-            Reset URL
-        </button>
+    <!-- LAYAR UTAMA (FULL SCREEN) -->
+    {#if activePeerId && streams[activePeerId]}
+        <video 
+            srcObject={streams[activePeerId]} 
+            autoplay playsinline muted
+            class="w-full h-full object-cover"
+        ></video>
     {:else}
-        <!-- Form Input -->
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-2xl w-[90%] max-w-sm flex flex-col gap-4 z-[101]">
-            <h3 class="text-white font-bold text-center text-sm">Setup Media/Stream</h3>
-            
-            <input 
-                type="text" 
-                bind:value={inputUrl}
-                placeholder="https://... .mp4 atau IP Camera"
-                class="bg-black border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none w-full text-base"
-                style="pointer-events: auto !important;"
-                onpointerdown={(e) => e.stopPropagation()}
-                onclick={(e) => e.stopPropagation()}
-            />
-            
-            <button 
-                onclick={applyUrl}
-                class="bg-blue-600 text-white font-bold py-3 rounded-lg active:scale-95 transition-transform"
-            >
-                Connect
-            </button>
-
-            {#if hasError}
-                <p class="text-red-400 text-xs text-center">Gagal memuat media. Cek URL!</p>
-            {/if}
+        <div class="absolute inset-0 top-[-110px] flex flex-col items-center justify-center text-white/50">
+            <p>Menunggu Koneksi Kamera...</p>
+            <p class="mt-4 font-mono">Peer ID: {myPeerId || '...'}</p>
         </div>
     {/if}
-</div>
 
-<style>
-    input { touch-action: manipulation; }
-</style>
+    <!-- PREVIEW GRID (HANYA MENAMPILKAN YANG TIDAK SEDANG FULL SCREEN) -->
+    <div class="absolute top-4 left-1/2 -translate-x-1/2 flex gap-2 z-50">
+        {#each Object.keys(streams) as id}
+            {#if id !== activePeerId}
+                <button 
+                    onclick={() => swapCamera(id)}
+                    class="w-32 h-20 bg-slate-900 rounded-lg overflow-hidden border-2 border-white/20 hover:border-blue-500 transition-all shadow-lg"
+                >
+                    <video 
+                        srcObject={streams[id]} 
+                        autoplay muted playsinline 
+                        class="w-full h-full object-cover"
+                    ></video>
+                </button>
+            {/if}
+        {/each}
+    </div>
+</div>
