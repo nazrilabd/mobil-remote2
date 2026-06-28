@@ -33,42 +33,20 @@
         <div class="text-5xl animate-[spin_2.5s_linear_infinite]">📱</div>
         <p class="font-mono text-xs uppercase tracking-[0.3em] text-cyan-400">Putar Perangkat</p>
         <p class="text-slate-500 text-xs">Mode landscape diperlukan untuk kontrol penuh</p>
+        <a 
+            href="/camera" 
+            class="mt-4 px-6 py-2 border border-cyan-500/50 text-cyan-400 text-xs font-mono uppercase tracking-widest hover:bg-cyan-500/10 transition-all rounded-md"
+        >
+            Buka Halaman Kamera
+        </a>
     </div>
 
     <!-- ================= LAYER KAMERA ================= -->
-    <div class="absolute inset-0 z-0 pointer-events-auto">
+    <div class="absolute inset-0 z-0 ">
         <CameraView />
     </div>
 
-    <!-- ================= OVERLAY: VIGNETTE + GRID + FRAME ================= -->
-    <div class="absolute inset-0 z-[5] pointer-events-none">
 
-        <!-- vignette agar HUD lebih terbaca di atas video -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/55"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/25"></div>
-
-        <!-- scanline halus -->
-        <div class="absolute inset-0 opacity-30 bg-[linear-gradient(rgba(34,211,238,0.05)_1px,transparent_1px)] bg-[size:100%_3px]"></div>
-
-        <!-- corner brackets -->
-        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path d="M3,9 L3,3 L9,3" fill="none" stroke="#22d3ee" stroke-width="0.35" opacity="0.8" />
-            <path d="M91,3 L97,3 L97,9" fill="none" stroke="#22d3ee" stroke-width="0.35" opacity="0.8" />
-            <path d="M97,91 L97,97 L91,97" fill="none" stroke="#22d3ee" stroke-width="0.35" opacity="0.8" />
-            <path d="M9,97 L3,97 L3,91" fill="none" stroke="#22d3ee" stroke-width="0.35" opacity="0.8" />
-        </svg>
-
-        <!-- center reticle / crosshair kecil di tengah frame, ciri khas kamera FPV -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50">
-            <svg width="34" height="34" viewBox="0 0 34 34">
-                <circle cx="17" cy="17" r="9" fill="none" stroke="#22d3ee" stroke-width="0.7" />
-                <line x1="17" y1="0" x2="17" y2="9" stroke="#22d3ee" stroke-width="0.7" />
-                <line x1="17" y1="25" x2="17" y2="34" stroke="#22d3ee" stroke-width="0.7" />
-                <line x1="0" y1="17" x2="9" y2="17" stroke="#22d3ee" stroke-width="0.7" />
-                <line x1="25" y1="17" x2="34" y2="17" stroke="#22d3ee" stroke-width="0.7" />
-            </svg>
-        </div>
-    </div>
 
     <!-- ================= HUD LAYER ================= -->
     <div class="relative z-10 w-full h-full p-3 md:p-4 flex flex-col justify-between pointer-events-none font-mono">
@@ -80,23 +58,23 @@
             <div class="flex gap-2">
                 <div class="flex items-center gap-1.5 bg-black/55 backdrop-blur-lg px-3 py-1.5 rounded-md border border-white/10 text-[10px] md:text-xs uppercase tracking-widest">
                     <span class="w-1.5 h-1.5 rounded-full {isConnected ? 'bg-emerald-400' : 'bg-red-500'} {isConnected ? '' : 'animate-pulse'}"></span>
-                    <span class="text-slate-500">LINK</span>
+                    <span class="text-slate-500">MQTT</span>
                     <span class={isConnected ? 'text-emerald-400' : 'text-red-400'}>{$mqttStatusText}</span>
                 </div>
                 <div class="flex items-center gap-1.5 bg-black/55 backdrop-blur-lg px-3 py-1.5 rounded-md border border-white/10 text-[10px] md:text-xs uppercase tracking-widest">
-                    <span class="text-slate-500">UNIT</span>
+                    <span class="text-slate-500">ROBOT</span>
                     <span class="text-cyan-300">{$esp32Status}</span>
                 </div>
             </div>
 
-            <!-- tengah atas: REC + timestamp, kesan rekaman live -->
+            <!-- tengah atas: REC + timestamp, kesan rekaman live 
             <div class="flex items-center gap-2 bg-black/55 backdrop-blur-lg px-3 py-1.5 rounded-md border border-white/10 text-[10px] md:text-xs">
                 <span class="flex items-center gap-1 text-red-500">
                     <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
                     REC
                 </span>
                 <span class="text-slate-400 tracking-widest">{timeString()}</span>
-            </div>
+            </div> -->
 
             <!-- kanan atas: baterai -->
             <div class="flex items-center gap-2 bg-black/55 backdrop-blur-lg px-3 py-1.5 rounded-md border border-white/10 text-[10px] md:text-xs uppercase tracking-widest">
@@ -115,11 +93,11 @@
         </header>
 
         <!-- BOTTOM HUD -->
-        <div class="flex justify-between items-end pointer-events-auto pb-1">
+        <div class="flex justify-between items-end pb-1">
 
             <!-- kiri bawah: D-pad + label -->
             <div class="flex flex-col items-center gap-1">
-                <div class="origin-bottom-left scale-[0.85] md:scale-100">
+                <div class="origin-bottom-left scale-[0.85] md:scale-100 pointer-events-auto">
                     <Controller />
                 </div>
                 <span class="text-[9px] text-cyan-500/60 tracking-[0.25em] -mt-1">MANUAL DRIVE</span>
@@ -131,7 +109,7 @@
                     <span class="text-[9px] text-slate-500 uppercase tracking-[0.2em]">Telemetry</span>
                     <span class="text-[9px] text-emerald-400 uppercase tracking-[0.2em]">Live</span>
                 </div>
-                <div class="space-y-4">
+                <div class="space-y-4 pointer-events-auto ">
                     <SpeedSlider />
                     <ClawSlider />
                 </div>
