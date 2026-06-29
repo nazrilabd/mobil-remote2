@@ -10,5 +10,5 @@ export const esp32Status = writable('Offline');
 
 // Telemetri & Parameter
 export const batteryLevel = writable(0);
-export const carSpeed = writable(128);
-export const clawPosition = writable(90);
+export const carSpeed = writable(0);
+export const clawPosition = writable(0);
