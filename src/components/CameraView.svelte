@@ -9,7 +9,7 @@
     let peer;
 
     // ---- panel ID (show/hide) ----
-    let showIdPanel = $state(false);
+    let showIdPanel = $state(true);
     let copied = $state(false);
 
     onMount(() => {
@@ -83,9 +83,9 @@
     {#if activePeerId && streams[activePeerId]}
         <video srcObject={streams[activePeerId]} autoplay playsinline muted class="w-full h-full object-cover"></video>
     {:else}
-        <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 font-mono">
+        <div class="absolute inset-0 top-8 flex flex-col items-center justify-center text-slate-500 font-mono">
             <div class="w-2 h-2 rounded-full bg-cyan-500 animate-ping mb-4"></div>
-            <p class="text-xs uppercase tracking-[0.3em] text-cyan-500/70">Menunggu Sinyal Kamera</p>
+            <p class="text-xs uppercase tracking-[0.3em] text-cyan-500/70"></p>
         </div>
     {/if}
 
@@ -102,7 +102,7 @@
     </div>
 
     <!-- ... (Sisanya kode panel ID dan Modal Anda tetap sama) ... -->
-    <div class="absolute top-20 right-4 z-40">
+    <div class="absolute top-20 right-4 z-80">
         <button onclick={() => (showIdPanel = !showIdPanel)} class="px-3 py-1.5 rounded-full bg-black/55 backdrop-blur-lg border border-cyan-500/30 text-cyan-300 text-[10px] font-mono uppercase hover:border-cyan-400 transition-colors">
             {showIdPanel ? 'Sembunyikan ID' : 'Tampilkan ID'}
         </button>
@@ -111,7 +111,7 @@
   {#if showIdPanel}
         <!-- Overlay -->
         <div 
-            class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center w-full h-full"
+            class="fixed z-60 inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center w-full h-full"
             role="dialog"
             aria-modal="true"
             onclick={() => (showIdPanel = false)}
@@ -119,33 +119,32 @@
             tabindex="0"
         >
             <!-- Konten Modal -->
-            <div 
-                class="w-56 bg-slate-900/95 border border-cyan-500/25 rounded-xl p-4 flex flex-col items-center gap-3 relative" 
-                role="presentation"
-                onclick={(e) => e.stopPropagation()}
-                onkeydown={(e) => e.stopPropagation()}
-            >
-                <!-- TOMBOL CLOSE KEMBALI -->
-                <button 
-                    type="button"
-                    onclick={() => (showIdPanel = false)}
-                    class="absolute top-2 right-2 text-slate-500 hover:text-white text-xs p-1"
-                    aria-label="Tutup"
-                >
-                    ✕
-                </button>
+           <!-- Konten Modal -->
+<div class="absolute top-8 z-60
+            w-auto          <!-- Gunakan ukuran tetap atau max-w -->
+            h-[125px]         <!-- Biarkan auto agar pas dengan isi -->
+            bg-slate-900/95 
+            border border-cyan-500/25 
+            rounded-xl 
+            p-4                <!-- Kurangi padding jika dirasa terlalu lebar -->
+            flex flex-col items-center gap-2"
+     role="presentation"
+     onclick={(e) => e.stopPropagation()}
+     onkeydown={(e) => e.stopPropagation()}
+>
+    <!-- Konten di dalam -->
+    <button type="button" onclick={() => (showIdPanel = false)} class="absolute top-2 right-2 text-slate-500 hover:text-white text-xs p-1">✕</button>
 
-                <img src={qrUrl(myPeerId)} alt="QR" class="w-32 h-32 rounded-md border border-cyan-500/20" />
-                <p class="text-[11px] text-cyan-300 font-mono break-all text-center">{myPeerId}</p>
-                
-                <button 
-                    type="button"
-                    onclick={copyPeerId} 
-                    class="w-full text-[10px] font-mono uppercase py-1.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300"
-                >
-                    {copied ? 'Tersalin ✓' : 'Salin ID'}
-                </button>
-            </div>
+    <!-- Perkecil QR Code jika modal terasa terlalu besar -->
+    <img src={qrUrl(myPeerId)} alt="QR" class="w-12 h-12 rounded-md border border-cyan-500/20" />
+    
+    <p class="text-[10px] text-cyan-300 font-mono break-all text-center">{myPeerId}</p>
+    
+    <button type="button" onclick={copyPeerId} class="w-full text-[10px] font-mono uppercase py-1 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
+        {copied ? 'Tersalin ✓' : 'Salin ID'}
+    </button>
+</div>
         </div>
     {/if}
 </div>
+
